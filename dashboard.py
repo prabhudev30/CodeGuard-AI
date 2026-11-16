@@ -97,7 +97,7 @@ if "review_result" in st.session_state:
 
                     st.dataframe(
                         rows,
-                        use_container_width=True,
+                        width="stretch",
                         hide_index=True,
                     )
 

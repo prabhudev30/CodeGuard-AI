@@ -72,3 +72,45 @@ def test_not_git_repository(tmp_path):
 
     assert result["status"] == "error"
     assert result["message"] == "Not a Git repository"
+
+
+def test_untracked_python_file(tmp_path):
+    create_repo(tmp_path)
+
+    new_file = tmp_path / "new_feature.py"
+    new_file.write_text("print('New feature')\n", encoding="utf-8")
+
+    result = get_changed_python_files(tmp_path)
+
+    assert result["status"] == "passed"
+    assert "new_feature.py" in result["files"]
+
+
+def test_untracked_python_file_in_subfolder(tmp_path):
+    create_repo(tmp_path)
+
+    folder = tmp_path / "features"
+    folder.mkdir()
+
+    new_file = folder / "new_feature.py"
+    new_file.write_text("print('Nested')\n", encoding="utf-8")
+
+    result = get_changed_python_files(tmp_path)
+
+    assert result["status"] == "passed"
+    assert "features/new_feature.py" in result["files"]
+
+
+def test_staged_new_python_file(tmp_path):
+    create_repo(tmp_path)
+
+    new_file = tmp_path / "staged.py"
+    new_file.write_text("print('Staged')\n", encoding="utf-8")
+
+    run_git(tmp_path, "add", "staged.py")
+
+    result = get_changed_python_files(tmp_path)
+
+    assert result["status"] == "passed"
+    assert "staged.py" in result["files"]
+

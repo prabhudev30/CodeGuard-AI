@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def get_changed_python_files(repo_path="."):
-    """Find tracked Python files changed in a Git repository."""
+    """Find modified, staged, and untracked Python files."""
 
     repo = Path(repo_path).resolve()
 
@@ -15,20 +15,16 @@ def get_changed_python_files(repo_path="."):
             "files": [],
         }
 
-    try:
-        check = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(repo),
-                "rev-parse",
-                "--show-toplevel",
-            ],
+    def run_git(*args):
+        return subprocess.run(
+            ["git", "-C", str(repo), *args],
             capture_output=True,
-            text=True,
             timeout=15,
             check=False,
         )
+
+    try:
+        check = run_git("rev-parse", "--show-toplevel")
 
         if check.returncode != 0:
             return {
@@ -37,37 +33,74 @@ def get_changed_python_files(repo_path="."):
                 "files": [],
             }
 
-        result = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(repo),
-                "diff",
-                "--name-only",
-                "--diff-filter=ACMRT",
-                "HEAD",
-                "--",
-                "*.py",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=15,
-            check=False,
+        root = Path(
+            check.stdout.decode("utf-8", errors="replace").strip()
+        ).resolve()
+
+        # Modified and staged files compared with HEAD.
+        tracked = run_git(
+            "diff",
+            "--name-only",
+            "-z",
+            "--diff-filter=ACMRT",
+            "HEAD",
+            "--",
+            "*.py",
         )
 
-        if result.returncode != 0:
+        if tracked.returncode != 0:
             return {
                 "status": "error",
-                "message": result.stderr.strip()
-                or "Git diff failed",
+                "message": "Git diff failed",
                 "files": [],
             }
 
-        files = [
-            name
-            for name in result.stdout.splitlines()
-            if name.endswith(".py")
-        ]
+        # New files that have not been added to Git.
+        untracked = run_git(
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "-z",
+            "--",
+            "*.py",
+        )
+
+        if untracked.returncode != 0:
+            return {
+                "status": "error",
+                "message": "Git untracked-file detection failed",
+                "files": [],
+            }
+
+        names = set()
+
+        for output in (tracked.stdout, untracked.stdout):
+            for raw_name in output.split(b"\0"):
+                if not raw_name:
+                    continue
+
+                name = raw_name.decode(
+                    "utf-8",
+                    errors="surrogateescape",
+                )
+
+                if not name.endswith(".py"):
+                    continue
+
+                # Git reports paths relative to the supplied
+                # directory for these commands.
+                candidate = (repo / name).resolve()
+
+                # Do not return files outside the Git repository.
+                if not candidate.is_relative_to(root):
+                    continue
+
+                if not candidate.is_file():
+                    continue
+
+                names.add(candidate.relative_to(repo).as_posix())
+
+        files = sorted(names)
 
         return {
             "status": "passed",
@@ -82,7 +115,7 @@ def get_changed_python_files(repo_path="."):
             "files": [],
         }
 
-    except OSError as error:
+    except (OSError, UnicodeError, ValueError) as error:
         return {
             "status": "error",
             "message": str(error),
