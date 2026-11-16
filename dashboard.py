@@ -4,6 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from codeguard.git_reviewer import review_changed_files
+from codeguard.upload_reviewer import review_uploaded_file
 from codeguard.report_generator import save_json_report
 from codeguard.html_report import generate_html_report
 from codeguard.issue_formatter import format_issue, explain_issue, calculate_priority
@@ -31,6 +32,38 @@ st.info(
 )
 
 
+review_mode = st.radio("Review Mode", ["Git Repository Review", "Upload Python File"], horizontal=True)
+if st.session_state.get("previous_review_mode") != review_mode:
+    for key in ("review_result", "review_folder", "json_report_path", "html_report_path"):
+        st.session_state.pop(key, None)
+    st.session_state["previous_review_mode"] = review_mode
+
+if review_mode == "Upload Python File":
+    uploaded = st.file_uploader("Choose a Python file", type=["py"], max_upload_size=2)
+    if st.button("Review Uploaded File", type="primary"):
+        if uploaded is None:
+            st.warning("Choose a Python file first.")
+        elif uploaded.size > 2 * 1024 * 1024:
+            st.error("Maximum file size is 2 MB.")
+        else:
+            try:
+                with st.spinner("Analyzing uploaded Python file..."):
+                    result = review_uploaded_file(uploaded.name, uploaded.getvalue())
+            except ValueError as error:
+                st.session_state.pop("review_result", None)
+                st.session_state.pop("json_report_path", None)
+                st.session_state.pop("html_report_path", None)
+                st.error(str(error))
+                st.stop()
+            if result["status"] == "error":
+                st.session_state.pop("review_result", None)
+                st.error("Uploaded file review failed.")
+            else:
+                st.session_state["review_result"] = result
+                st.session_state.pop("json_report_path", None)
+                st.session_state.pop("html_report_path", None)
+                st.success("Uploaded file review completed.")
+
 # --------------------------------------------------
 # Project folder selection
 # --------------------------------------------------
@@ -38,14 +71,14 @@ st.info(
 project_path = st.text_input(
     "Git project folder",
     value=str(Path.cwd()),
-)
+) if review_mode == "Git Repository Review" else None
 
 
 # --------------------------------------------------
 # Run code review
 # --------------------------------------------------
 
-if st.button("Run Code Review", type="primary"):
+if review_mode == "Git Repository Review" and st.button("Run Code Review", type="primary"):
 
     folder = Path(project_path).expanduser()
 
@@ -90,7 +123,7 @@ if "review_result" in st.session_state:
 
     col3.metric(
         "Status",
-        result["status"],
+        result["status"].replace("_", " ").title(),
     )
 
     st.subheader("Filter Findings")
@@ -128,7 +161,7 @@ if "review_result" in st.session_state:
         file_name = Path(review["file"]).name
 
         with st.expander(
-            f"{file_name} — {review['status']}",
+            f"{file_name} — {review['status'].replace('_', ' ').title()}",
             expanded=False,
         ):
 
