@@ -33,3 +33,16 @@ ISSUE_GUIDANCE = {
 def explain_issue(code):
     title, fix = ISSUE_GUIDANCE.get(code, ("Unrecognized rule", "Review the analyzer message and rule documentation."))
     return {"Explanation": title, "Suggested Fix": fix}
+
+
+def calculate_priority(issue, category):
+    if category == "security":
+        severity = str(issue.get("issue_severity") or "").upper()
+        return {"HIGH": "High", "MEDIUM": "Medium", "LOW": "Low"}.get(severity, "Review")
+    if category == "quality":
+        code = issue.get("code")
+        if code in ("F821", "E999"):
+            return "High"
+        if code == "F401":
+            return "Low"
+    return "Review"
