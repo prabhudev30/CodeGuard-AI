@@ -113,7 +113,7 @@ if "review_result" in st.session_state:
                 row["File"] = file_review["file"]
                 all_findings.append(row)
     visible_findings = filter_findings(all_findings, selected_category, selected_priority, search_text)
-    st.caption(f"Showing {len(visible_findings)} of {len(all_findings)} quality and security findings")
+    st.caption(f"Showing {len(visible_findings)} of {len(all_findings)} findings")
     if visible_findings:
         st.dataframe(visible_findings, width="stretch", hide_index=True)
     elif all_findings:
