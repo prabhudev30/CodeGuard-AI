@@ -7,6 +7,8 @@ from codeguard.git_reviewer import review_changed_files
 from codeguard.report_generator import save_json_report
 from codeguard.html_report import generate_html_report
 from codeguard.issue_formatter import format_issue, explain_issue, calculate_priority
+from codeguard.issue_filter import filter_findings
+from codeguard.syntax_findings import format_syntax_finding
 
 
 # --------------------------------------------------
@@ -91,6 +93,32 @@ if "review_result" in st.session_state:
         result["status"],
     )
 
+    st.subheader("Filter Findings")
+    filter_col1, filter_col2, filter_col3 = st.columns(3)
+    with filter_col1:
+        selected_category = st.selectbox("Category", ["All", "Quality", "Security", "Syntax"])
+    with filter_col2:
+        selected_priority = st.selectbox("Priority", ["All", "High", "Medium", "Low", "Review"])
+    with filter_col3:
+        search_text = st.text_input("Search issues", placeholder="Rule, description, or filename")
+    all_findings = []
+    for file_review in result["reviews"]:
+        syntax_finding = format_syntax_finding(file_review)
+        if syntax_finding is not None:
+            all_findings.append(syntax_finding)
+        for category in ("quality", "security"):
+            for issue in (file_review.get(category) or {}).get("issues", []):
+                row = {**format_issue(issue, category), "Priority": calculate_priority(issue, category), **explain_issue(issue.get("test_id") or issue.get("code") or "N/A")}
+                row["Category"] = category.title()
+                row["File"] = file_review["file"]
+                all_findings.append(row)
+    visible_findings = filter_findings(all_findings, selected_category, selected_priority, search_text)
+    st.caption(f"Showing {len(visible_findings)} of {len(all_findings)} quality and security findings")
+    if visible_findings:
+        st.dataframe(visible_findings, width="stretch", hide_index=True)
+    elif all_findings:
+        st.info("No findings match the selected filters.")
+
     # ----------------------------------------------
     # Individual file results
     # ----------------------------------------------
@@ -101,7 +129,7 @@ if "review_result" in st.session_state:
 
         with st.expander(
             f"{file_name} — {review['status']}",
-            expanded=True,
+            expanded=False,
         ):
 
             st.write("**File:**", review["file"])
