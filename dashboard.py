@@ -6,7 +6,7 @@ import streamlit as st
 from codeguard.git_reviewer import review_changed_files
 from codeguard.report_generator import save_json_report
 from codeguard.html_report import generate_html_report
-from codeguard.issue_formatter import format_issue
+from codeguard.issue_formatter import format_issue, explain_issue
 
 
 # --------------------------------------------------
@@ -123,7 +123,7 @@ if "review_result" in st.session_state:
                 if issues:
 
                     rows = [
-                        format_issue(issue, category)
+                        {**format_issue(issue, category), **explain_issue(issue.get("test_id") or issue.get("code") or "N/A")}
                         for issue in issues
                     ]
 
