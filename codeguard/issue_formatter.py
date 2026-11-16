@@ -27,6 +27,16 @@ ISSUE_GUIDANCE = {
     "B602": ("Shell command execution", "Avoid shell=True with untrusted input; use an argument list."),
     "B603": ("Subprocess execution", "Check that command arguments cannot be controlled by untrusted input."),
     "B404": ("Subprocess module", "Review subprocess usage and avoid unsafe command execution."),
+    "F811": ("Redefined name", "Remove the duplicate definition or use a different name."),
+    "F841": ("Unused variable", "Remove the variable or use its assigned value."),
+    "F823": ("Local variable referenced before assignment", "Assign the variable before reading it in the local scope."),
+    "E402": ("Import not at top of file", "Move imports to the top of the module where practical."),
+    "E701": ("Multiple statements on one line", "Place each statement on its own line."),
+    "E702": ("Multiple statements separated by semicolon", "Split the statements onto separate lines."),
+    "E703": ("Unnecessary semicolon", "Remove the unnecessary semicolon."),
+    "E711": ("Incorrect comparison with None", "Use is None or is not None instead of equality comparison."),
+    "B102": ("Use of exec", "Avoid executing dynamic Python code, especially from untrusted input."),
+    "B307": ("Use of eval", "Avoid eval on untrusted expressions; use a safer parser when appropriate."),
 }
 
 
