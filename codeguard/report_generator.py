@@ -1,6 +1,7 @@
 
 
 import json
+from codeguard.report_enrichment import enrich_review
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -25,6 +26,7 @@ def save_json_report(review_result, output_path="reports/codeguard_report.json")
             "tool": "CodeGuard AI",
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "review": review_result,
+            "enriched_findings": enrich_review(review_result),
         }
 
         # Validate the entire JSON before touching the destination.

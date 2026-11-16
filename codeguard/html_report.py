@@ -1,6 +1,7 @@
 
 import html
 import json
+from codeguard.report_enrichment import enrich_issue
 from pathlib import Path
 
 
@@ -45,13 +46,11 @@ def generate_html_report(
                         location.get("row", "N/A"),
                     )
 
+                    enriched = enrich_issue(issue, category)
                     issue_rows.append(
-                        "<tr>"
-                        f"<td>{escape(category.title())}</td>"
-                        f"<td>{code}</td>"
-                        f"<td>{escape(line)}</td>"
-                        f"<td>{message}</td>"
-                        "</tr>"
+                        '<tr>'
+                        + ''.join('<td>' + escape(enriched.get(field, "")) + '</td>' for field in ('Category', 'Code', 'Line', 'Description', 'Severity', 'Priority', 'Explanation', 'Suggested Fix'))
+                        + '</tr>'
                     )
 
             syntax = file_review.get("syntax", {})
@@ -62,6 +61,10 @@ def generate_html_report(
                     "<td>N/A</td>"
                     "<td>N/A</td>"
                     f"<td>{escape(syntax.get('message', 'Syntax issue'))}</td>"
+                    "<td>N/A</td>"
+                    "<td>N/A</td>"
+                    "<td>N/A</td>"
+                    "<td>N/A</td>"
                     "</tr>"
                 )
 
@@ -69,7 +72,7 @@ def generate_html_report(
 
             if not rows:
                 rows = (
-                    '<tr><td colspan="4">'
+                    '<tr><td colspan="8">'
                     "No issues detected"
                     "</td></tr>"
                 )
@@ -82,6 +85,8 @@ def generate_html_report(
                 "<thead><tr>"
                 "<th>Category</th><th>Code</th>"
                 "<th>Line</th><th>Message</th>"
+                "<th>Severity</th><th>Priority</th>"
+                "<th>Explanation</th><th>Suggested Fix</th>"
                 "</tr></thead>"
                 f"<tbody>{rows}</tbody>"
                 "</table>"
