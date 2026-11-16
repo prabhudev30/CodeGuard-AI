@@ -34,7 +34,7 @@ def generate_html_report(
                 category_result = file_review.get(category, {})
 
                 for issue in category_result.get("issues", []):
-                    code = escape(issue.get("code", issue.get("test_id", "N/A")))
+                    code = escape(issue.get("test_id") or issue.get("code") or "N/A")
                     message = escape(
                         issue.get("message", issue.get("issue_text", ""))
                     )

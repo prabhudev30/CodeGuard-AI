@@ -6,7 +6,7 @@ from codeguard.ruff_checker import check_code_quality
 from codeguard.security_checker import check_security
 
 
-def review_file(file_path):
+def review_file(file_path, skip_assert_checks=False):
     """Run all CodeGuard analyzers on one Python file."""
 
     path = Path(file_path)
@@ -20,7 +20,7 @@ def review_file(file_path):
 
     syntax = check_syntax(path)
     quality = check_code_quality(path)
-    security = check_security(path)
+    security = check_security(path, skip_assert_checks=skip_assert_checks)
 
     results = {
         "file": str(path),

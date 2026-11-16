@@ -23,3 +23,5 @@ reports/*.html
 .idea/
 .DS_Store
 Thumbs.db
+*.py.bak
+*.py.pre_fix_backup

@@ -26,7 +26,17 @@ def review_changed_files(repo_path="."):
     for filename in changes["files"]:
         file_path = repo / filename
 
-        result = review_file(file_path)
+        relative_path = Path(filename)
+
+        is_test_file = (
+            "tests" in relative_path.parts[:-1]
+            and relative_path.name.startswith("test_")
+        )
+
+        result = review_file(
+            file_path,
+            skip_assert_checks=is_test_file,
+        )
         reviews.append(result)
 
     total_issues = sum(

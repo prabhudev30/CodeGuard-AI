@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-def check_security(file_path):
+def check_security(file_path, skip_assert_checks=False):
     """Scan a Python file for potential security issues."""
 
     path = Path(file_path)
@@ -26,6 +26,9 @@ def check_security(file_path):
         "-q",
         str(path),
     ]
+    
+    if skip_assert_checks:
+        command.extend(["-s", "B101"])
 
     try:
         result = subprocess.run(
