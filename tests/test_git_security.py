@@ -57,3 +57,13 @@ def test_unicode_python_filename(tmp_path):
     result = get_changed_python_files(repo)
     assert result["status"] == "passed"
     assert filename in result["files"]
+
+
+def test_special_character_filename(tmp_path):
+    repo = tmp_path / "repo"
+    make_repo(repo)
+    filename = "report [final] #1.py"
+    (repo / filename).write_text("x = 1", encoding="utf-8")
+    result = get_changed_python_files(repo)
+    assert result["status"] == "passed"
+    assert filename in result["files"]
