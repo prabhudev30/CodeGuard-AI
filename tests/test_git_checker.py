@@ -123,3 +123,33 @@ def test_git_operation_timeout(tmp_path):
     assert result["status"] == "error"
     assert result["message"] == "Git operation timed out"
     assert result["files"] == []
+
+
+def test_git_diff_failure(tmp_path):
+    from unittest.mock import patch
+    create_repo(tmp_path)
+    real_run = subprocess.run
+    def fake_run(args, **kwargs):
+        if "diff" in args:
+            return subprocess.CompletedProcess(args, 1, stdout=b"", stderr=b"failure")
+        return real_run(args, **kwargs)
+    with patch("codeguard.git_checker.subprocess.run", side_effect=fake_run):
+        result = get_changed_python_files(tmp_path)
+    assert result["status"] == "error"
+    assert result["message"] == "Git diff failed"
+    assert result["files"] == []
+
+
+def test_git_untracked_failure(tmp_path):
+    from unittest.mock import patch
+    create_repo(tmp_path)
+    real_run = subprocess.run
+    def fake_run(args, **kwargs):
+        if "ls-files" in args:
+            return subprocess.CompletedProcess(args, 1, stdout=b"", stderr=b"failure")
+        return real_run(args, **kwargs)
+    with patch("codeguard.git_checker.subprocess.run", side_effect=fake_run):
+        result = get_changed_python_files(tmp_path)
+    assert result["status"] == "error"
+    assert result["message"] == "Git untracked-file detection failed"
+    assert result["files"] == []
