@@ -47,3 +47,13 @@ def test_nested_python_file(tmp_path):
     result = get_changed_python_files(repo)
     assert result["status"] == "passed"
     assert "src/modules/worker.py" in result["files"]
+
+
+def test_unicode_python_filename(tmp_path):
+    repo = tmp_path / "repo"
+    make_repo(repo)
+    filename = "café.py"
+    (repo / filename).write_text("x = 1", encoding="utf-8")
+    result = get_changed_python_files(repo)
+    assert result["status"] == "passed"
+    assert filename in result["files"]
