@@ -114,3 +114,12 @@ def test_staged_new_python_file(tmp_path):
     assert result["status"] == "passed"
     assert "staged.py" in result["files"]
 
+
+
+def test_git_operation_timeout(tmp_path):
+    from unittest.mock import patch
+    with patch("codeguard.git_checker.subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="git", timeout=15)):
+        result = get_changed_python_files(tmp_path)
+    assert result["status"] == "error"
+    assert result["message"] == "Git operation timed out"
+    assert result["files"] == []
