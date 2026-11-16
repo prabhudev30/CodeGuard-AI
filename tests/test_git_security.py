@@ -36,3 +36,14 @@ def test_external_symlink_is_not_scanned(tmp_path):
     result = get_changed_python_files(repo)
     assert result["status"] == "passed"
     assert "external.py" not in result["files"]
+
+
+def test_nested_python_file(tmp_path):
+    repo = tmp_path / "repo"
+    make_repo(repo)
+    nested = repo / "src" / "modules"
+    nested.mkdir(parents=True)
+    (nested / "worker.py").write_text("x = 1", encoding="utf-8")
+    result = get_changed_python_files(repo)
+    assert result["status"] == "passed"
+    assert "src/modules/worker.py" in result["files"]
