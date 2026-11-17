@@ -1,4 +1,5 @@
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -17,6 +18,13 @@ def check_security(file_path, skip_assert_checks=False):
             "issues": [],
         }
 
+    if importlib.util.find_spec("bandit") is None:
+        return {
+            "status": "error",
+            "message": "Bandit was not found",
+            "issues": [],
+        }
+
     command = [
         sys.executable,
         "-m",
@@ -24,16 +32,18 @@ def check_security(file_path, skip_assert_checks=False):
         "-f",
         "json",
         "-q",
-        str(path),
     ]
-    
+
     if skip_assert_checks:
         command.extend(["-s", "B101"])
+
+    command.extend(["--", str(path)])
 
     try:
         result = subprocess.run(
             command,
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             text=True,
             timeout=30,
             check=False,
@@ -47,8 +57,23 @@ def check_security(file_path, skip_assert_checks=False):
                 "issues": [],
             }
 
-        report = json.loads(result.stdout)
-        issues = report.get("results", [])
+        try:
+            report = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            return {
+                "status": "error",
+                "message": "Bandit returned invalid output",
+                "issues": [],
+            }
+
+        issues = report.get("results", []) if isinstance(report, dict) else None
+
+        if not isinstance(issues, list):
+            return {
+                "status": "error",
+                "message": "Bandit returned invalid output",
+                "issues": [],
+            }
 
         return {
             "status": "passed" if not issues else "issues_found",

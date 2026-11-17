@@ -3,6 +3,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from codeguard.tool_path import resolve_executable
+
 
 def check_code_quality(file_path):
     """Analyze a Python file using Ruff."""
@@ -16,14 +18,24 @@ def check_code_quality(file_path):
             "issues": [],
         }
 
+    ruff = resolve_executable("ruff")
+
+    if ruff is None:
+        return {
+            "status": "error",
+            "message": "Ruff was not found",
+            "issues": [],
+        }
+
     command = [
-        "ruff",
+        str(ruff),
         "check",
         "--output-format",
         "json",
         "--no-cache",
         "--select",
         "E4,E7,E9,F",
+        "--",
         str(path),
     ]
 
@@ -31,6 +43,7 @@ def check_code_quality(file_path):
         result = subprocess.run(
             command,
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             text=True,
             timeout=30,
             check=False,
@@ -44,7 +57,21 @@ def check_code_quality(file_path):
                 "issues": [],
             }
 
-        issues = json.loads(result.stdout)
+        try:
+            issues = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            return {
+                "status": "error",
+                "message": "Ruff returned invalid output",
+                "issues": [],
+            }
+
+        if not isinstance(issues, list):
+            return {
+                "status": "error",
+                "message": "Ruff returned invalid output",
+                "issues": [],
+            }
 
         return {
             "status": "passed" if not issues else "issues_found",

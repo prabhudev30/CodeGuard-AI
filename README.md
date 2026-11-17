@@ -54,4 +54,4 @@ CodeGuard AI analyzes local source files without intentionally executing the rev
 
 ## Project status
 
-Development version preparing for the v1.0 release.
+Version 1.4 development on the develop-v1.4 branch.

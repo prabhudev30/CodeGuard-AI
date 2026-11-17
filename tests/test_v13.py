@@ -42,6 +42,7 @@ def test_report_health(tmp_path):
     jp, hp = tmp_path / "out.json", tmp_path / "out.html"
     assert save_json_report(result, jp)["status"] == "passed"
     report = json.loads(jp.read_text(encoding="utf-8"))
+    assert report["app_version"] == "1.4.0"
     assert report["schema_version"] == "1.3"
     assert report["health"]["overall"] is not None
     assert generate_html_report(jp, hp)["status"] == "passed"

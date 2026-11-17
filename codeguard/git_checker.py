@@ -2,6 +2,8 @@
 import subprocess
 from pathlib import Path
 
+from codeguard.tool_path import resolve_executable
+
 
 def get_changed_python_files(repo_path="."):
     """Find modified, staged, and untracked Python files."""
@@ -15,10 +17,20 @@ def get_changed_python_files(repo_path="."):
             "files": [],
         }
 
+    git = resolve_executable("git")
+
+    if git is None:
+        return {
+            "status": "error",
+            "message": "Git was not found",
+            "files": [],
+        }
+
     def run_git(*args):
         return subprocess.run(
-            ["git", "-C", str(repo), *args],
+            [str(git), "-C", str(repo), *args],
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             timeout=15,
             check=False,
         )
