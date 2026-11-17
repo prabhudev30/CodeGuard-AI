@@ -1,9 +1,9 @@
 
 from pathlib import Path
 
-from codeguard.syntax_checker import check_syntax
 from codeguard.ruff_checker import check_code_quality
 from codeguard.security_checker import check_security
+from codeguard.syntax_checker import check_syntax
 
 
 def review_file(file_path, skip_assert_checks=False):

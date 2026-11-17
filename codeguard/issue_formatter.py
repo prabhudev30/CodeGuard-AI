@@ -42,7 +42,15 @@ ISSUE_GUIDANCE = {
 
 def explain_issue(code):
     title, fix = ISSUE_GUIDANCE.get(code, ("Unrecognized rule", "Review the analyzer message and rule documentation."))
-    return {"Explanation": title, "Suggested Fix": fix}
+    details = {
+        "F401": "Unused imports add clutter and can hide mistakes.",
+        "F821": "A missing name can raise NameError when the code runs.",
+        "F841": "Unused variables may indicate incomplete logic.",
+        "B307": "eval can execute dangerous expressions when input is untrusted.",
+        "B602": "Shell execution can be exploited when arguments are untrusted.",
+        "E722": "A bare except may hide important failures.",
+    }
+    return {"Explanation": title, "Suggested Fix": fix, "Why It Matters": details.get(code, "This finding may affect correctness, maintainability, or security; inspect the analyzer message."), "Example": "", "Corrected Example": ""}
 
 
 def calculate_priority(issue, category):

@@ -1,4 +1,4 @@
-from codeguard.issue_formatter import format_issue, explain_issue, calculate_priority
+from codeguard.issue_formatter import calculate_priority, explain_issue, format_issue
 
 
 def enrich_issue(issue, category):

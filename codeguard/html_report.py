@@ -1,8 +1,10 @@
 
 import html
 import json
-from codeguard.report_enrichment import enrich_issue
 from pathlib import Path
+
+from codeguard.health_score import score_review
+from codeguard.report_enrichment import enrich_issue
 
 
 def escape(value):
@@ -35,17 +37,6 @@ def generate_html_report(
                 category_result = file_review.get(category, {})
 
                 for issue in category_result.get("issues", []):
-                    code = escape(issue.get("test_id") or issue.get("code") or "N/A")
-                    message = escape(
-                        issue.get("message", issue.get("issue_text", ""))
-                    )
-
-                    location = issue.get("location", {})
-                    line = issue.get(
-                        "line_number",
-                        location.get("row", "N/A"),
-                    )
-
                     enriched = enrich_issue(issue, category)
                     issue_rows.append(
                         '<tr>'
@@ -97,6 +88,11 @@ def generate_html_report(
         total_issues = escape(review.get("total_issues", 0))
         overall_status = escape(review.get("status", "unknown"))
         generated_at = escape(data.get("generated_at", "Unknown"))
+        health = data.get("health") or score_review(review)
+        overall_score = escape(health.get("overall") if health.get("overall") is not None else "Not scored")
+        quality_score = escape(health.get("quality") if health.get("quality") is not None else "Not scored")
+        security_score = escape(health.get("security") if health.get("security") is not None else "Not scored")
+        syntax_score = escape(health.get("syntax") if health.get("syntax") is not None else "Not scored")
 
         page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -175,8 +171,13 @@ footer {{
 <div class="metric">Files Reviewed<strong>{files_reviewed}</strong></div>
 <div class="metric">Total Issues<strong>{total_issues}</strong></div>
 <div class="metric">Overall Status<strong>{overall_status}</strong></div>
+<div class="metric">Health Score<strong>{overall_score}/100</strong></div>
+<div class="metric">Quality<strong>{quality_score}/100</strong></div>
+<div class="metric">Security<strong>{security_score}/100</strong></div>
+<div class="metric">Syntax<strong>{syntax_score}/100</strong></div>
 </div>
 <p>Generated: {generated_at}</p>
+<p>Scores are indicative and do not certify security. All analysis is local.</p>
 {''.join(sections) or '<p>No changed files were reviewed.</p>'}
 </main>
 <footer>Generated locally by CodeGuard AI</footer>

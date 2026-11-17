@@ -1,11 +1,13 @@
 
 
 import json
-from codeguard.report_enrichment import enrich_review
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+
+from codeguard.health_score import score_review
+from codeguard.report_enrichment import enrich_review
 
 
 def save_json_report(review_result, output_path="reports/codeguard_report.json"):
@@ -24,7 +26,11 @@ def save_json_report(review_result, output_path="reports/codeguard_report.json")
 
         report = {
             "tool": "CodeGuard AI",
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "app_version": "1.3.0",
+            "schema_version": "1.3",
+            "health": score_review(review_result),
+            "review_mode": review_result.get("review_mode", "unspecified"),
+            "generated_at": datetime.now(UTC).isoformat(),
             "review": review_result,
             "enriched_findings": enrich_review(review_result),
         }
