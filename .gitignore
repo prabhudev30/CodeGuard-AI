@@ -28,3 +28,15 @@ Thumbs.db
 *.py.step46_backup
 *.py.step49_backup
 *.py.step50_backup
+# Local development backups
+*.step*_backup
+*.before_*_backup
+*.v12_backup
+
+# Temporary archives and patches
+*.zip
+*.patch
+
+# Local upgrade scripts
+upgrade_codeguard_v13.py
+codeguard/apply_codeguard_v15.py
