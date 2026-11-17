@@ -1,10 +1,12 @@
 import json
+
 import pytest
-from codeguard.upload_reviewer import review_uploaded_files, MAX_UPLOAD_BYTES
+
 from codeguard.health_score import score_file, score_review
+from codeguard.html_report import generate_html_report
 from codeguard.issue_formatter import explain_issue
 from codeguard.report_generator import save_json_report
-from codeguard.html_report import generate_html_report
+from codeguard.upload_reviewer import MAX_UPLOAD_BYTES, review_uploaded_files
 
 
 def test_batch_review():
@@ -42,7 +44,7 @@ def test_report_health(tmp_path):
     jp, hp = tmp_path / "out.json", tmp_path / "out.html"
     assert save_json_report(result, jp)["status"] == "passed"
     report = json.loads(jp.read_text(encoding="utf-8"))
-    assert report["app_version"] == "1.4.0"
+    assert report["app_version"] == "1.5.0"
     assert report["schema_version"] == "1.3"
     assert report["health"]["overall"] is not None
     assert generate_html_report(jp, hp)["status"] == "passed"

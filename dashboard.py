@@ -168,6 +168,28 @@ if "review_result" in st.session_state:
     elif all_findings:
         st.info("No findings match the selected filters.")
 
+    # Optional offline guidance for the currently filtered findings.
+    guided_findings = [finding for finding in visible_findings if finding.get("Example") and finding.get("Corrected Example")]
+    if guided_findings:
+        st.subheader("Offline Smart Fix Assistant")
+        st.caption("Examples are illustrative, not exact edits to your code. No code is executed or changed.")
+        choices = {
+            f"{index + 1}. {finding.get('File', 'Unknown')} | {finding.get('Code', 'N/A')} | line {finding.get('Line', 'N/A')}": finding
+            for index, finding in enumerate(guided_findings)
+        }
+        selected_guidance = st.selectbox("Choose a finding to understand", list(choices), key="v15_guidance_selection")
+        guidance = choices[selected_guidance]
+        st.write("**Explanation:**", guidance.get("Explanation", ""))
+        st.write("**Suggested fix:**", guidance.get("Suggested Fix", ""))
+        st.write("**Why it matters:**", guidance.get("Why It Matters", ""))
+        before_col, after_col = st.columns(2)
+        with before_col:
+            st.markdown("**Illustrative before**")
+            st.code(guidance["Example"], language="python")
+        with after_col:
+            st.markdown("**Illustrative after**")
+            st.code(guidance["Corrected Example"], language="python")
+
     # ----------------------------------------------
     # Individual file results
     # ----------------------------------------------

@@ -38,9 +38,20 @@ def generate_html_report(
 
                 for issue in category_result.get("issues", []):
                     enriched = enrich_issue(issue, category)
+                    example = enriched.get("Example", "")
+                    corrected = enriched.get("Corrected Example", "")
+                    examples_html = ""
+                    if example and corrected:
+                        examples_html = (
+                            '<details><summary>Illustrative before / after</summary>'
+                            '<p>Before</p><pre><code>' + escape(example) + '</code></pre>'
+                            '<p>After</p><pre><code>' + escape(corrected) + '</code></pre>'
+                            '</details>'
+                        )
                     issue_rows.append(
                         '<tr>'
                         + ''.join('<td>' + escape(enriched.get(field, "")) + '</td>' for field in ('Category', 'Code', 'Line', 'Description', 'Severity', 'Priority', 'Explanation', 'Suggested Fix'))
+                        + '<td>' + examples_html + '</td>'
                         + '</tr>'
                     )
 
@@ -56,6 +67,7 @@ def generate_html_report(
                     "<td>N/A</td>"
                     "<td>N/A</td>"
                     "<td>N/A</td>"
+                    "<td>N/A</td>"
                     "</tr>"
                 )
 
@@ -63,7 +75,7 @@ def generate_html_report(
 
             if not rows:
                 rows = (
-                    '<tr><td colspan="8">'
+                    '<tr><td colspan="9">'
                     "No issues detected"
                     "</td></tr>"
                 )
@@ -77,7 +89,7 @@ def generate_html_report(
                 "<th>Category</th><th>Code</th>"
                 "<th>Line</th><th>Message</th>"
                 "<th>Severity</th><th>Priority</th>"
-                "<th>Explanation</th><th>Suggested Fix</th>"
+                "<th>Explanation</th><th>Suggested Fix</th><th>Examples</th>"
                 "</tr></thead>"
                 f"<tbody>{rows}</tbody>"
                 "</table>"
@@ -154,6 +166,7 @@ th, td {{
 th {{
     background: #eef2f9;
 }}
+pre {{ white-space: pre-wrap; overflow-wrap: anywhere; background: #f1f4f9; padding: 12px; border-radius: 6px; }}
 footer {{
     text-align: center;
     padding: 24px;

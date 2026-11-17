@@ -26,7 +26,7 @@ def save_json_report(review_result, output_path="reports/codeguard_report.json")
 
         report = {
             "tool": "CodeGuard AI",
-            "app_version": "1.4.0",
+            "app_version": "1.5.0",
             "schema_version": "1.3",
             "health": score_review(review_result),
             "review_mode": review_result.get("review_mode", "unspecified"),

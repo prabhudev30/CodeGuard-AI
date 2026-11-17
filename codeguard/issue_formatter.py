@@ -40,6 +40,22 @@ ISSUE_GUIDANCE = {
 }
 
 
+# Offline, illustrative examples only; never execute analyzed code.
+ISSUE_EXAMPLES = {
+    "F401": ("import os\nprint('Hello')", "print('Hello')"),
+    "F821": ("print(username)", "username = 'Alice'\nprint(username)"),
+    "F841": ("def greet():\n    unused = 42\n    print('Hi')", "def greet():\n    print('Hi')"),
+    "E402": ("print('Start')\nimport os", "import os\n\nprint('Start')"),
+    "E711": ("if value == None:\n    print('Missing')", "if value is None:\n    print('Missing')"),
+    "E701": ("if ready: print('Go')", "if ready:\n    print('Go')"),
+    "E702": ("x = 1; y = 2", "x = 1\ny = 2"),
+    "B101": ("assert user_is_admin", "if not user_is_admin:\n    raise PermissionError('Access denied')"),
+    "B602": ("subprocess.run('echo hello', shell=True)", "subprocess.run(['echo', 'hello'], check=True)"),
+    "B603": ("subprocess.run([user_supplied_program])", "# Validate the executable and arguments against an allowlist\nsubprocess.run([trusted_executable], check=True)"),
+    "B307": ("value = eval(user_input)", "import ast\nvalue = ast.literal_eval(user_input)  # Only for Python literals"),
+}
+
+
 def explain_issue(code):
     title, fix = ISSUE_GUIDANCE.get(code, ("Unrecognized rule", "Review the analyzer message and rule documentation."))
     details = {
@@ -50,7 +66,8 @@ def explain_issue(code):
         "B602": "Shell execution can be exploited when arguments are untrusted.",
         "E722": "A bare except may hide important failures.",
     }
-    return {"Explanation": title, "Suggested Fix": fix, "Why It Matters": details.get(code, "This finding may affect correctness, maintainability, or security; inspect the analyzer message."), "Example": "", "Corrected Example": ""}
+    before, after = ISSUE_EXAMPLES.get(code, ("", ""))
+    return {"Explanation": title, "Suggested Fix": fix, "Why It Matters": details.get(code, "This finding may affect correctness, maintainability, or security; inspect the analyzer message."), "Example": before, "Corrected Example": after}
 
 
 def calculate_priority(issue, category):
